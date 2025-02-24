@@ -54,4 +54,5 @@ junit.xml
 !/.github/workflows/push.yml
 !/.github/workflows/pull-request.yml
 !/.github/workflows/post-cdk-diff.yml
+.env
 !/.projenrc.ts
