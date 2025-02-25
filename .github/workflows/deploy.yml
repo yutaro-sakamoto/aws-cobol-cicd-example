@@ -23,15 +23,17 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup .npmrc
+        run: echo '@yutaro-sakamoto:registry=https://npm.pkg.github.com' >> ~/.npmrc && echo '//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}' >> ~/.npmrc
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - run: yarn install
       - name: Set environment variabble CDK_DEFAULT_REGION
-        run: echo "export CDK_DEFAULT_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
+        run: echo CDK_DEFAULT_REGION="${{ secrets.AWS_REGION }}" >> "$GITHUB_ENV"
       - name: Set environment variabble CDK_DEFAULT_ACCOUNT
-        run: echo "export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ID }}" >> $GITHUB_ENV
+        run: echo CDK_DEFAULT_ACCOUNT="${{ secrets.AWS_ID }}" >> "$GITHUB_ENV"
       - name: Deploy
         run: npx cdk deploy --require-approval never

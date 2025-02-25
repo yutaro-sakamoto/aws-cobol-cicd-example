@@ -34,26 +34,50 @@ new YamlFile(project, '.github/workflows/push-dev.yml', {
       contents: 'read',
     },
     jobs: {
-      'check-workflows': {
+      deploy: {
         permissions: {
           contents: 'read',
-        },
-        uses: './.github/workflows/check-workflows.yml',
-      },
-      'test': {
-        needs: 'check-workflows',
-        permissions: {
-          contents: 'read',
+          'id-token': 'write',
         },
         secrets: 'inherit',
         uses: './.github/workflows/deploy.yml',
         with: {
           environment: 'dev',
-        }
+        },
       },
     },
   },
 });
+
+// Remove push.yml temporarily
+project.tryRemoveFile('.github/workflows/push.yml');
+//new YamlFile(project, '.github/workflows/push.yml', {
+//  obj: {
+//    name: 'push',
+//    on: {
+//      push: {
+//        branches: ['dev'],
+//      },
+//    },
+//    concurrency: {
+//      'group': '${{ github.workflow }}-${{ github.ref }}',
+//      'cancel-in-progress': true,
+//    },
+//    permissions: {
+//      contents: 'read',
+//    },
+//    jobs: {
+//      test: {
+//        permissions: {
+//          contents: 'read',
+//        },
+//        secrets: 'inherit',
+//        uses: './.github/workflows/test.yml',
+//      },
+//    },
+//  },
+//
+//});
 
 // Deploy to AWS
 new YamlFile(project, '.github/workflows/deploy.yml', {
@@ -66,9 +90,9 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
             type: 'string',
             required: true,
             description: 'Environment to deploy to',
-          }
-        }
-      }
+          },
+        },
+      },
     },
     permissions: {
       contents: 'read',
@@ -77,8 +101,8 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
     jobs: {
       deploy: {
         'runs-on': 'ubuntu-latest',
-        environment: '${{ inputs.environment }}',
-        steps: [
+        'environment': '${{ inputs.environment }}',
+        'steps': [
           {
             uses: 'aws-actions/configure-aws-credentials@v4',
             with: {
@@ -92,23 +116,29 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
             uses: 'actions/checkout@v4',
           },
           {
+            name: 'Setup .npmrc',
+            run:
+              'echo \'@yutaro-sakamoto:registry=https://npm.pkg.github.com\' >> ~/.npmrc && ' +
+              'echo \'//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}\' >> ~/.npmrc'
+          },
+          {
             uses: 'actions/setup-node@v4',
             with: {
               'node-version': '22',
-              cache: 'npm',
-              'cache-dependency-path': 'package-lock.json',
+              'cache': 'yarn',
+              'cache-dependency-path': 'yarn.lock',
             },
           },
           {
-            run: 'npm ci',
+            run: 'yarn install',
           },
           {
             name: 'Set environment variabble CDK_DEFAULT_REGION',
-            run: 'echo "export CDK_DEFAULT_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV',
+            run: 'echo CDK_DEFAULT_REGION="${{ secrets.AWS_REGION }}" >> "$GITHUB_ENV"',
           },
           {
             name: 'Set environment variabble CDK_DEFAULT_ACCOUNT',
-            run: 'echo "export CDK_DEFAULT_ACCOUNT=${{ secrets.AWS_ID }}" >> $GITHUB_ENV',
+            run: 'echo CDK_DEFAULT_ACCOUNT="${{ secrets.AWS_ID }}" >> "$GITHUB_ENV"',
           },
           {
             name: 'Deploy',

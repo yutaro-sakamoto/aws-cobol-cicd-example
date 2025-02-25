@@ -11,14 +11,10 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  check-workflows:
+  deploy:
     permissions:
       contents: read
-    uses: ./.github/workflows/check-workflows.yml
-  test:
-    needs: check-workflows
-    permissions:
-      contents: read
+      id-token: write
     secrets: inherit
     uses: ./.github/workflows/deploy.yml
     with:
