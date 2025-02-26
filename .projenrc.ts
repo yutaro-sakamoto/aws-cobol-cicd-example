@@ -40,10 +40,10 @@ new YamlFile(project, '.github/workflows/push-dev.yml', {
         },
         uses: './.github/workflows/check-workflows.yml',
       },
-      deploy: {
+      'deploy': {
         needs: 'check-workflows',
         permissions: {
-          contents: 'read',
+          'contents': 'read',
           'id-token': 'write',
         },
         secrets: 'inherit',
@@ -68,7 +68,7 @@ new YamlFile(project, '.github/workflows/check-workflows.yml', {
     jobs: {
       build: {
         'runs-on': 'ubuntu-latest',
-        steps: [
+        'steps': [
           {
             name: 'Checkout',
             uses: 'actions/checkout@v4',
@@ -110,7 +110,7 @@ new YamlFile(project, '.github/workflows/push.yml', {
         },
         uses: './.github/workflows/check-workflows.yml',
       },
-      test: {
+      'test': {
         needs: 'check-workflows',
         permissions: {
           contents: 'read',
@@ -138,14 +138,14 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
       },
     },
     permissions: {
-      contents: 'read',
+      'contents': 'read',
       'id-token': 'write',
     },
     jobs: {
       deploy: {
         'runs-on': 'ubuntu-latest',
-        environment: '${{ inputs.environment }}',
-        steps: [
+        'environment': '${{ inputs.environment }}',
+        'steps': [
           {
             uses: 'aws-actions/configure-aws-credentials@v4',
             with: {
@@ -162,7 +162,7 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
             name: 'Setup .npmrc',
             run:
               'echo \'@yutaro-sakamoto:registry=https://npm.pkg.github.com\' >> ~/.npmrc && ' +
-              'echo \'//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}\' >> ~/.npmrc'
+              'echo \'//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}\' >> ~/.npmrc',
           },
           {
             uses: 'actions/setup-node@v4',
@@ -186,6 +186,62 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
           {
             name: 'Deploy',
             run: 'npx cdk deploy --require-approval never',
+          },
+        ],
+      },
+    },
+  },
+});
+
+project.tryRemoveFile('.github/workflows/test.yml');
+// Deploy to AWS
+new YamlFile(project, '.github/workflows/test.yml', {
+  obj: {
+    name: 'test',
+    on: 'workflow_call',
+    permissions: {
+      contents: 'read',
+    },
+    jobs: {
+      deploy: {
+        'runs-on': 'ubuntu-latest',
+        'steps': [
+          {
+            name: 'Checkout',
+            uses: 'actions/checkout@v4',
+          },
+          {
+            name: 'Setup .npmrc',
+            run:
+              'echo \'@yutaro-sakamoto:registry=https://npm.pkg.github.com\' >> ~/.npmrc && ' +
+              'echo \'//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}\' >> ~/.npmrc',
+          },
+          {
+            uses: 'actions/setup-node@v4',
+            with: {
+              'node-version': '22',
+              'cache': 'yarn',
+              'cache-dependency-path': 'yarn.lock',
+            },
+          },
+          {
+            run: 'yarn install',
+          },
+          {
+            name: 'Check format by Prettier',
+            run: 'npx prettier src --check',
+          },
+          {
+            name: 'Check by ESLint',
+            run: 'yarn eslint',
+          },
+          {
+            name: 'Tests',
+            run: 'yarn test',
+          },
+          {
+            name: 'Check docs',
+            run: 'npx typedoc --validation --treatWarningsAsErrors --treatValidationWarningsAsErrors src/*.ts',
           },
         ],
       },

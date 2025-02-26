@@ -1,6 +1,6 @@
-import { App, Stack, StackProps } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as dotenv from 'dotenv';
+import { App, Stack, StackProps } from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as dotenv from "dotenv";
 
 dotenv.config();
 export class MyStack extends Stack {
@@ -19,7 +19,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, 'aws-cobol-cicd-example-dev', { env: devEnv });
+new MyStack(app, "aws-cobol-cicd-example-dev", { env: devEnv });
 // new MyStack(app, 'aws-cobol-cicd-example-prod', { env: prodEnv });
 
 app.synth();

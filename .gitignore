@@ -49,7 +49,6 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
-!/.github/workflows/test.yml
 !/.github/workflows/pull-request.yml
 !/.github/workflows/post-cdk-diff.yml
 .env
@@ -57,4 +56,5 @@ junit.xml
 !/.github/workflows/check-workflows.yml
 !/.github/workflows/push.yml
 !/.github/workflows/deploy.yml
+!/.github/workflows/test.yml
 !/.projenrc.ts
