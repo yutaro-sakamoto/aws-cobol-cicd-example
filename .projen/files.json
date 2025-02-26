@@ -10,6 +10,7 @@
     ".github/workflows/pull-request-lint.yml",
     ".github/workflows/pull-request.yml",
     ".github/workflows/push-dev.yml",
+    ".github/workflows/push.yml",
     ".github/workflows/test.yml",
     ".github/workflows/upgrade.yml",
     ".gitignore",

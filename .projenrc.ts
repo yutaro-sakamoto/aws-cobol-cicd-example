@@ -34,7 +34,14 @@ new YamlFile(project, '.github/workflows/push-dev.yml', {
       contents: 'read',
     },
     jobs: {
+      'check-workflows': {
+        permissions: {
+          contents: 'read',
+        },
+        uses: './.github/workflows/check-workflows.yml',
+      },
       deploy: {
+        needs: 'check-workflows',
         permissions: {
           contents: 'read',
           'id-token': 'write',
@@ -49,35 +56,71 @@ new YamlFile(project, '.github/workflows/push-dev.yml', {
   },
 });
 
-// Remove push.yml temporarily
+
+project.tryRemoveFile('.github/workflows/check-workflows.yml');
+new YamlFile(project, '.github/workflows/check-workflows.yml', {
+  obj: {
+    name: 'Check workflow files',
+    on: 'workflow_call',
+    permissions: {
+      contents: 'read',
+    },
+    jobs: {
+      build: {
+        'runs-on': 'ubuntu-latest',
+        steps: [
+          {
+            name: 'Checkout',
+            uses: 'actions/checkout@v4',
+          },
+          {
+            name: 'Install actionlint',
+            run: 'GOBIN=$(pwd) go install github.com/rhysd/actionlint/cmd/actionlint@latest',
+          },
+          {
+            name: 'Run actionlint',
+            run: 'find .github/workflows -name "*.yml" ! -name "upgrade.yml" ! -name "build.yml" ! -name "pull-request-lint.yml" -print0 | xargs -0 ./actionlint',
+          },
+        ],
+      },
+    },
+  },
+});
+
 project.tryRemoveFile('.github/workflows/push.yml');
-//new YamlFile(project, '.github/workflows/push.yml', {
-//  obj: {
-//    name: 'push',
-//    on: {
-//      push: {
-//        branches: ['dev'],
-//      },
-//    },
-//    concurrency: {
-//      'group': '${{ github.workflow }}-${{ github.ref }}',
-//      'cancel-in-progress': true,
-//    },
-//    permissions: {
-//      contents: 'read',
-//    },
-//    jobs: {
-//      test: {
-//        permissions: {
-//          contents: 'read',
-//        },
-//        secrets: 'inherit',
-//        uses: './.github/workflows/test.yml',
-//      },
-//    },
-//  },
-//
-//});
+new YamlFile(project, '.github/workflows/push.yml', {
+  obj: {
+    name: 'push',
+    on: {
+      push: {
+        'branches-ignore': ['dev'],
+      },
+    },
+    concurrency: {
+      'group': '${{ github.workflow }}-${{ github.ref }}',
+      'cancel-in-progress': true,
+    },
+    permissions: {
+      contents: 'read',
+    },
+    jobs: {
+      'check-workflows': {
+        permissions: {
+          contents: 'read',
+        },
+        uses: './.github/workflows/check-workflows.yml',
+      },
+      test: {
+        needs: 'check-workflows',
+        permissions: {
+          contents: 'read',
+        },
+        secrets: 'inherit',
+        uses: './.github/workflows/test.yml',
+      },
+    },
+  },
+});
 
 // Deploy to AWS
 new YamlFile(project, '.github/workflows/deploy.yml', {
@@ -101,8 +144,8 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
     jobs: {
       deploy: {
         'runs-on': 'ubuntu-latest',
-        'environment': '${{ inputs.environment }}',
-        'steps': [
+        environment: '${{ inputs.environment }}',
+        steps: [
           {
             uses: 'aws-actions/configure-aws-credentials@v4',
             with: {

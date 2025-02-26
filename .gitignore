@@ -49,12 +49,12 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
-!/.github/workflows/check-workflows.yml
 !/.github/workflows/test.yml
-!/.github/workflows/push.yml
 !/.github/workflows/pull-request.yml
 !/.github/workflows/post-cdk-diff.yml
 .env
 !/.github/workflows/push-dev.yml
+!/.github/workflows/check-workflows.yml
+!/.github/workflows/push.yml
 !/.github/workflows/deploy.yml
 !/.projenrc.ts

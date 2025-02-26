@@ -3,7 +3,7 @@
 name: push
 on:
   push:
-    branches:
+    branches-ignore:
       - dev
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,12 +15,9 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/check-workflows.yml
-  deploy:
+  test:
     needs: check-workflows
     permissions:
       contents: read
-      id-token: write
     secrets: inherit
-    uses: ./.github/workflows/deploy.yml
-    with:
-      environment: dev
+    uses: ./.github/workflows/test.yml
