@@ -3,6 +3,10 @@ import { Construct } from "constructs";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+
+/**
+ * サンプルのスタック
+ */
 export class MyStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
