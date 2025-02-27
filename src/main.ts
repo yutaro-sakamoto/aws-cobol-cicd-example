@@ -1,6 +1,8 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as dotenv from "dotenv";
+import { AwsSolutionsChecks } from "cdk-nag";
+import * as cdk from "aws-cdk-lib";
 
 dotenv.config();
 
@@ -24,6 +26,6 @@ const devEnv = {
 const app = new App();
 
 new MyStack(app, "aws-cobol-cicd-example-dev", { env: devEnv });
-// new MyStack(app, 'aws-cobol-cicd-example-prod', { env: prodEnv });
+cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 app.synth();

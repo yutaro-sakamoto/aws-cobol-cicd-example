@@ -14,6 +14,7 @@ const project = new AwsCdkTypeScriptApp({
 });
 
 project.addDeps('dotenv');
+project.addDeps('cdk-nag');
 project.gitignore.addPatterns('.env');
 
 
