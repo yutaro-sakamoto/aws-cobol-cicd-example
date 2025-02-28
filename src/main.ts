@@ -3,16 +3,20 @@ import { Construct } from "constructs";
 import * as dotenv from "dotenv";
 import { AwsSolutionsChecks } from "cdk-nag";
 import * as cdk from "aws-cdk-lib";
+import * as ecr from "aws-cdk-lib/aws-ecr";
 
 dotenv.config();
 
 /**
  * サンプルのスタック
  */
-export class MyStack extends Stack {
+export class EcrStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {}) {
     super(scope, id, props);
 
+    new ecr.Repository(this, "ECRRepository", {
+      repositoryName: "my-ecr-repo",
+    });
     // define resources here...
   }
 }
@@ -25,7 +29,7 @@ const devEnv = {
 
 const app = new App();
 
-new MyStack(app, "aws-cobol-cicd-example-dev", { env: devEnv });
+new EcrStack(app, "aws-cobol-cicd-example-dev", { env: devEnv });
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 app.synth();
