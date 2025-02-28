@@ -204,7 +204,7 @@ new YamlFile(project, '.github/workflows/test.yml', {
       contents: 'read',
     },
     jobs: {
-      deploy: {
+      test: {
         'runs-on': 'ubuntu-latest',
         'steps': [
           {
