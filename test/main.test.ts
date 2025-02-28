@@ -1,11 +1,10 @@
-import { App } from 'aws-cdk-lib';
+import { App, Aspects } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { MyStack } from '../src/main';
-import { AwsSolutionsChecks } from "cdk-nag";
-import { Aspects } from "aws-cdk-lib";
+import { AwsSolutionsChecks } from 'cdk-nag';
+import { EcrStack } from '../src/main';
 
 const app = new App();
-const stack = new MyStack(app, 'test');
+const stack = new EcrStack(app, 'test');
 
 Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 

@@ -9,6 +9,16 @@ exports[`Snapshot 1`] = `
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
+  "Resources": {
+    "ECRRepositoryF3A3832E": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RepositoryName": "my-ecr-repo",
+      },
+      "Type": "AWS::ECR::Repository",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
   "Rules": {
     "CheckBootstrapVersion": {
       "Assertions": [

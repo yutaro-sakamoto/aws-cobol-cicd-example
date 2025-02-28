@@ -1,9 +1,9 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
-import { Construct } from "constructs";
-import * as dotenv from "dotenv";
-import { AwsSolutionsChecks } from "cdk-nag";
 import * as cdk from "aws-cdk-lib";
 import * as ecr from "aws-cdk-lib/aws-ecr";
+import { AwsSolutionsChecks } from "cdk-nag";
+import { Construct } from "constructs";
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
