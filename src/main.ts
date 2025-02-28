@@ -1,11 +1,11 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
+import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
+import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
 import * as dotenv from "dotenv";
-import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
-import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
 
 dotenv.config();
 

@@ -10,6 +10,349 @@ exports[`Snapshot 1`] = `
     },
   },
   "Resources": {
+    "ApplicationPipeline4C988C4B": {
+      "DependsOn": [
+        "ApplicationPipelineRoleDefaultPolicyCADAF9C3",
+        "ApplicationPipelineRoleADFF393B",
+      ],
+      "Properties": {
+        "ArtifactStore": {
+          "EncryptionKey": {
+            "Id": {
+              "Fn::GetAtt": [
+                "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": {
+            "Ref": "ApplicationPipelineArtifactsBucketD6B45A16",
+          },
+          "Type": "S3",
+        },
+        "Name": "ApplicationPipeline",
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "ApplicationPipelineRoleADFF393B",
+            "Arn",
+          ],
+        },
+        "Stages": [
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": {
+                  "Branch": "master",
+                  "OAuthToken": "",
+                  "Owner": "yutaro-sakamoto",
+                  "PollForSourceChanges": false,
+                  "Repo": "aws-cobol-cicd-example",
+                },
+                "Name": "GitHubSource",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Artifact_Source_GitHubSource",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          {
+            "Actions": [
+              {
+                "ActionTypeId": {
+                  "Category": "Approval",
+                  "Owner": "AWS",
+                  "Provider": "Manual",
+                  "Version": "1",
+                },
+                "Name": "ManualApproval",
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Build",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "ApplicationPipelineArtifactsBucketD6B45A16": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+                    "Arn",
+                  ],
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ApplicationPipelineArtifactsBucketEncryptionKeyAliasF37F2519": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "AliasName": "alias/codepipeline-testapplicationpipeline676b7a1a",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834": {
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-KMS5",
+              "reason": "This key is used for the artifact bucket.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ApplicationPipelineArtifactsBucketPolicy0F22EB48": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "ApplicationPipelineArtifactsBucketD6B45A16",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineArtifactsBucketD6B45A16",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ApplicationPipelineArtifactsBucketD6B45A16",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ApplicationPipelineRoleADFF393B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ApplicationPipelineRoleDefaultPolicyCADAF9C3": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineArtifactsBucketD6B45A16",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ApplicationPipelineArtifactsBucketD6B45A16",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ApplicationPipelineRoleDefaultPolicyCADAF9C3",
+        "Roles": [
+          {
+            "Ref": "ApplicationPipelineRoleADFF393B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "ECRRepositoryF3A3832E": {
       "DeletionPolicy": "Retain",
       "Properties": {
