@@ -44,7 +44,7 @@ export class EcrStack extends Stack {
           owner: "yutaro-sakamoto",
           repo: "aws-cobol-cicd-example",
           output: sourceOutput,
-          oauthToken: cdk.SecretValue.unsafePlainText(""),
+          oauthToken: cdk.SecretValue.secretsManager("github-token"),
           trigger: codepipeline_actions.GitHubTrigger.NONE,
         }),
       ],
