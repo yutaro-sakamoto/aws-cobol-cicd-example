@@ -44,16 +44,15 @@ exports[`Snapshot 1`] = `
               {
                 "ActionTypeId": {
                   "Category": "Source",
-                  "Owner": "ThirdParty",
-                  "Provider": "GitHub",
+                  "Owner": "AWS",
+                  "Provider": "CodeStarSourceConnection",
                   "Version": "1",
                 },
                 "Configuration": {
-                  "Branch": "master",
-                  "OAuthToken": "",
-                  "Owner": "yutaro-sakamoto",
-                  "PollForSourceChanges": false,
-                  "Repo": "aws-cobol-cicd-example",
+                  "BranchName": "dev",
+                  "ConnectionArn": "arn:aws:codeconnections:ap-northeast-1:377426933046:connection/7d76c990-5676-472f-9132-70f681587d55",
+                  "DetectChanges": true,
+                  "FullRepositoryId": "yutaro-sakamoto/aws-cobol-cicd-example",
                 },
                 "Name": "GitHubSource",
                 "OutputArtifacts": [
@@ -61,6 +60,12 @@ exports[`Snapshot 1`] = `
                     "Name": "Artifact_Source_GitHubSource",
                   },
                 ],
+                "RoleArn": {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineSourceGitHubSourceCodePipelineActionRoleE89A168C",
+                    "Arn",
+                  ],
+                },
                 "RunOrder": 1,
               },
             ],
@@ -336,6 +341,16 @@ exports[`Snapshot 1`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
+                  "ApplicationPipelineSourceGitHubSourceCodePipelineActionRoleE89A168C",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
                   "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918",
                   "Arn",
                 ],
@@ -352,6 +367,133 @@ exports[`Snapshot 1`] = `
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "ApplicationPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy6ECA3CD7": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "codestar-connections:UseConnection",
+              "Effect": "Allow",
+              "Resource": "arn:aws:codeconnections:ap-northeast-1:377426933046:connection/7d76c990-5676-472f-9132-70f681587d55",
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineArtifactsBucketD6B45A16",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ApplicationPipelineArtifactsBucketD6B45A16",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:PutObjectAcl",
+                "s3:PutObjectVersionAcl",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "ApplicationPipelineArtifactsBucketD6B45A16",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ApplicationPipelineSourceGitHubSourceCodePipelineActionRoleDefaultPolicy6ECA3CD7",
+        "Roles": [
+          {
+            "Ref": "ApplicationPipelineSourceGitHubSourceCodePipelineActionRoleE89A168C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ApplicationPipelineSourceGitHubSourceCodePipelineActionRoleE89A168C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
     "ECRRepositoryF3A3832E": {
       "DeletionPolicy": "Retain",
