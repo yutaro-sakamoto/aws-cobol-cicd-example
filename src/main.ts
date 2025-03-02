@@ -39,13 +39,15 @@ export class EcrStack extends Stack {
     pipeline.addStage({
       stageName: "Source",
       actions: [
-        new codepipeline_actions.GitHubSourceAction({
+        new codepipeline_actions.CodeStarConnectionsSourceAction({
           actionName: "GitHubSource",
           owner: "yutaro-sakamoto",
           repo: "aws-cobol-cicd-example",
+          branch: "dev",
           output: sourceOutput,
-          oauthToken: cdk.SecretValue.secretsManager("github-token"),
-          trigger: codepipeline_actions.GitHubTrigger.NONE,
+          connectionArn:
+            "arn:aws:codeconnections:ap-northeast-1:377426933046:connection/7d76c990-5676-472f-9132-70f681587d55",
+          triggerOnPush: true,
         }),
       ],
     });
