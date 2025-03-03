@@ -6,6 +6,7 @@ import * as ecr from "aws-cdk-lib/aws-ecr";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
 import * as dotenv from "dotenv";
+import * as codebuild from "aws-cdk-lib/aws-codebuild";
 
 dotenv.config();
 
@@ -52,15 +53,34 @@ export class EcrStack extends Stack {
       ],
     });
 
+    const buildOutput = new codepipeline.Artifact();
     pipeline.addStage({
       stageName: "Build",
       actions: [
-        new codepipeline_actions.ManualApprovalAction({
-          actionName: "ManualApproval",
+        new codepipeline_actions.CodeBuildAction({
+          actionName: "DockerBuild",
+          project: new codebuild.PipelineProject(this, "DockerBuildProject", {
+            environment: {
+              buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+              privileged: true,
+            },
+            buildSpec: codebuild.BuildSpec.fromObject({
+              version: "0.2",
+              phases: {
+                build: {
+                  commands: ["echo hello > message.txt"],
+                },
+              },
+              artifacts: {
+                files: ["message.txt"],
+              },
+            }),
+          }),
+          input: sourceOutput,
+          outputs: [buildOutput],
         }),
       ],
     });
-    // define resources here...
   }
 }
 
