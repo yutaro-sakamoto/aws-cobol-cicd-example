@@ -75,15 +75,30 @@ exports[`Snapshot 1`] = `
             "Actions": [
               {
                 "ActionTypeId": {
-                  "Category": "Approval",
+                  "Category": "Build",
                   "Owner": "AWS",
-                  "Provider": "Manual",
+                  "Provider": "CodeBuild",
                   "Version": "1",
                 },
-                "Name": "ManualApproval",
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "DockerBuildProject52E5CDF6",
+                  },
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "Artifact_Source_GitHubSource",
+                  },
+                ],
+                "Name": "DockerBuild",
+                "OutputArtifacts": [
+                  {
+                    "Name": "Artifact_Build_DockerBuild",
+                  },
+                ],
                 "RoleArn": {
                   "Fn::GetAtt": [
-                    "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918",
+                    "ApplicationPipelineBuildDockerBuildCodePipelineActionRole7DA0A42F",
                     "Arn",
                   ],
                 },
@@ -230,7 +245,7 @@ exports[`Snapshot 1`] = `
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918": {
+    "ApplicationPipelineBuildDockerBuildCodePipelineActionRole7DA0A42F": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -261,6 +276,36 @@ exports[`Snapshot 1`] = `
         },
       },
       "Type": "AWS::IAM::Role",
+    },
+    "ApplicationPipelineBuildDockerBuildCodePipelineActionRoleDefaultPolicyA88B4868": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "DockerBuildProject52E5CDF6",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ApplicationPipelineBuildDockerBuildCodePipelineActionRoleDefaultPolicyA88B4868",
+        "Roles": [
+          {
+            "Ref": "ApplicationPipelineBuildDockerBuildCodePipelineActionRole7DA0A42F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ApplicationPipelineRoleADFF393B": {
       "Properties": {
@@ -351,7 +396,7 @@ exports[`Snapshot 1`] = `
               "Effect": "Allow",
               "Resource": {
                 "Fn::GetAtt": [
-                  "ApplicationPipelineBuildManualApprovalCodePipelineActionRole54B63918",
+                  "ApplicationPipelineBuildDockerBuildCodePipelineActionRole7DA0A42F",
                   "Arn",
                 ],
               },
@@ -494,6 +539,246 @@ exports[`Snapshot 1`] = `
         },
       },
       "Type": "AWS::IAM::Role",
+    },
+    "DockerBuildProject52E5CDF6": {
+      "Properties": {
+        "Artifacts": {
+          "Type": "CODEPIPELINE",
+        },
+        "Cache": {
+          "Type": "NO_CACHE",
+        },
+        "EncryptionKey": {
+          "Fn::GetAtt": [
+            "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+            "Arn",
+          ],
+        },
+        "Environment": {
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "Image": "aws/codebuild/amazonlinux2-x86_64-standard:5.0",
+          "ImagePullCredentialsType": "CODEBUILD",
+          "PrivilegedMode": true,
+          "Type": "LINUX_CONTAINER",
+        },
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "DockerBuildProjectRoleA531069C",
+            "Arn",
+          ],
+        },
+        "Source": {
+          "BuildSpec": "{
+  "version": "0.2",
+  "phases": {
+    "build": {
+      "commands": [
+        "echo hello > message.txt"
+      ]
+    }
+  },
+  "artifacts": {
+    "files": [
+      "message.txt"
+    ]
+  }
+}",
+          "Type": "CODEPIPELINE",
+        },
+      },
+      "Type": "AWS::CodeBuild::Project",
+    },
+    "DockerBuildProjectRoleA531069C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DockerBuildProjectRoleDefaultPolicy4E03935A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DockerBuildProject52E5CDF6",
+                      },
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":log-group:/aws/codebuild/",
+                      {
+                        "Ref": "DockerBuildProject52E5CDF6",
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "codebuild:CreateReportGroup",
+                "codebuild:CreateReport",
+                "codebuild:UpdateReport",
+                "codebuild:BatchPutTestCases",
+                "codebuild:BatchPutCodeCoverages",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codebuild:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":report-group/",
+                    {
+                      "Ref": "DockerBuildProject52E5CDF6",
+                    },
+                    "-*",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "ApplicationPipelineArtifactsBucketD6B45A16",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "ApplicationPipelineArtifactsBucketD6B45A16",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ApplicationPipelineArtifactsBucketEncryptionKeyD6D77834",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DockerBuildProjectRoleDefaultPolicy4E03935A",
+        "Roles": [
+          {
+            "Ref": "DockerBuildProjectRoleA531069C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ECRRepositoryF3A3832E": {
       "DeletionPolicy": "Retain",
