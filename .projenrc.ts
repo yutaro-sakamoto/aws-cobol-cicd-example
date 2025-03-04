@@ -177,12 +177,12 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
             run: 'yarn install',
           },
           {
-            name: 'Set environment variabble CDK_DEFAULT_REGION',
-            run: 'echo CDK_DEFAULT_REGION="${{ secrets.AWS_REGION }}" >> "$GITHUB_ENV"',
-          },
-          {
-            name: 'Set environment variabble CDK_DEFAULT_ACCOUNT',
-            run: 'echo CDK_DEFAULT_ACCOUNT="${{ secrets.AWS_ID }}" >> "$GITHUB_ENV"',
+            name: 'Set environment variables',
+            run: `
+              echo CDK_DEFAULT_REGION="\${{ secrets.AWS_REGION }}" >> "$GITHUB_ENV" &&
+              echo CDK_DEFAULT_ACCOUNT="\${{ secrets.AWS_ID }}" >> "$GITHUB_ENV" &&
+              echo CDK_DEFAULT_ACCOUNT="\${{ secrets.AWS_CODECONNECTIONS_ARN }}" >> "$GITHUB_ENV"
+            `,
           },
           {
             name: 'Deploy',

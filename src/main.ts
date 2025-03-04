@@ -46,7 +46,8 @@ export class EcrStack extends Stack {
           repo: "aws-cobol-cicd-example",
           branch: "dev",
           output: sourceOutput,
-          connectionArn: process.env.AWS_CODECONNECTIONS_ARN!,
+          connectionArn:
+            process.env.AWS_CODECONNECTIONS_ARN || "aws_codeconections_arn",
           triggerOnPush: true,
         }),
       ],
