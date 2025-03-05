@@ -7,6 +7,7 @@ import * as ecr from "aws-cdk-lib/aws-ecr";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
 import * as dotenv from "dotenv";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ export class EcrStack extends Stack {
 
     const pipeline = new codepipeline.Pipeline(this, "ApplicationPipeline", {
       pipelineName: "ApplicationPipeline",
+      pipelineType: codepipeline.PipelineType.V2,
     });
 
     NagSuppressions.addResourceSuppressions(
@@ -75,6 +77,20 @@ export class EcrStack extends Stack {
                 files: ["message.txt"],
               },
             }),
+            role: new iam.Role(this, "CodeBuildRole", {
+              assumedBy: new iam.ServicePrincipal("codebuild.amazonaws.com"),
+              managedPolicies: [
+                iam.ManagedPolicy.fromAwsManagedPolicyName(
+                  "AmazonS3ReadOnlyAccess",
+                ),
+                iam.ManagedPolicy.fromAwsManagedPolicyName(
+                  "AmazonEC2ContainerRegistryReadOnly",
+                ),
+                iam.ManagedPolicy.fromAwsManagedPolicyName(
+                  "CloudWatchLogsFullAccess",
+                ),
+              ],
+            }),
           }),
           input: sourceOutput,
           outputs: [buildOutput],
@@ -96,6 +112,7 @@ const stack = new EcrStack(app, "aws-cobol-cicd-example-dev", { env: devEnv });
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 NagSuppressions.addStackSuppressions(stack, [
   { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
+  { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
   {
     id: "AwsSolutions-S1",
     reason: "Server access logs of S3 bucket are unnecessary",
