@@ -203,6 +203,10 @@ new YamlFile(project, '.github/workflows/test.yml', {
     permissions: {
       contents: 'read',
     },
+    env: {
+      CDK_DEFAULT_ACCOUNT: 'example-account',
+      CDK_DEFAULT_REGION: 'ap-northeast-1',
+    },
     jobs: {
       test: {
         'runs-on': 'ubuntu-latest',
