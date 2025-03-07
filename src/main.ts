@@ -1,4 +1,4 @@
-import { App, Stack, StackProps } from "aws-cdk-lib";
+import { App, Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
@@ -28,6 +28,10 @@ export class EcrStack extends Stack {
       pipelineType: codepipeline.PipelineType.V2,
     });
 
+    new CfnOutput(this, "applicationPipelineName", {
+      value: pipeline.pipelineName,
+    });
+
     NagSuppressions.addResourceSuppressions(
       pipeline.artifactBucket.encryptionKey!,
       [
@@ -51,7 +55,7 @@ export class EcrStack extends Stack {
           output: sourceOutput,
           connectionArn:
             process.env.AWS_CODECONNECTIONS_ARN || "aws_codeconections_arn",
-          triggerOnPush: true,
+          triggerOnPush: false,
         }),
       ],
     });

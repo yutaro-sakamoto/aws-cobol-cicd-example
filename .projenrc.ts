@@ -186,7 +186,11 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
           },
           {
             name: 'Deploy',
-            run: 'npx cdk deploy --require-approval never',
+            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json',
+          },
+          {
+            name: 'Start pipeline execution',
+            run: 'aws codepipeline start-pipeline-execution --name "$(jq -r .applicationPipelineName cdk-outputs.json)" --region "$CDK_DEFAULT_REGION"',
           },
         ],
       },

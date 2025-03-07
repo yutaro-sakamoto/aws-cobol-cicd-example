@@ -2,6 +2,13 @@
 
 exports[`Snapshot 1`] = `
 {
+  "Outputs": {
+    "applicationPipelineName": {
+      "Value": {
+        "Ref": "ApplicationPipeline4C988C4B",
+      },
+    },
+  },
   "Parameters": {
     "BootstrapVersion": {
       "Default": "/cdk-bootstrap/hnb659fds/version",
@@ -52,7 +59,7 @@ exports[`Snapshot 1`] = `
                 "Configuration": {
                   "BranchName": "dev",
                   "ConnectionArn": "aws_codeconections_arn",
-                  "DetectChanges": true,
+                  "DetectChanges": false,
                   "FullRepositoryId": "yutaro-sakamoto/aws-cobol-cicd-example",
                 },
                 "Name": "GitHubSource",
