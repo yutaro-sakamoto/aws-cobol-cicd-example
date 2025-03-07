@@ -190,7 +190,7 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
           },
           {
             name: 'Start pipeline execution',
-            run: 'aws codepipeline start-pipeline-execution --name "$(jq -r .applicationPipelineName cdk-outputs.json)" --region "$CDK_DEFAULT_REGION"',
+            run: 'aws codepipeline start-pipeline-execution --name "$(jq -r \'."aws-cobol-cicd-example-dev".applicationPipelineName\' cdk-outputs.json)" --region "$CDK_DEFAULT_REGION"',
           },
         ],
       },
