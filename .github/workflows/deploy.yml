@@ -42,6 +42,6 @@ jobs:
 
           \            "
       - name: Deploy
-        run: npx cdk deploy --require-approval never --outputs-file cdk-outputs.json
+        run: npx cdk deploy --require-approval never --outputs-file cdk-outputs.json --all
       - name: Start pipeline execution
         run: aws codepipeline start-pipeline-execution --name "$(jq -r '."aws-cobol-cicd-example-dev".applicationPipelineName' cdk-outputs.json)" --region "$CDK_DEFAULT_REGION"
