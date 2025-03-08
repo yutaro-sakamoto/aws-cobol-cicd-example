@@ -102,7 +102,7 @@ new YamlFile(project, '.github/workflows/push.yml', {
       'cancel-in-progress': true,
     },
     permissions: {
-      contents: 'read',
+      'contents': 'read',
       'id-token': 'write',
     },
     jobs: {
@@ -115,7 +115,7 @@ new YamlFile(project, '.github/workflows/push.yml', {
       'test': {
         needs: 'check-workflows',
         permissions: {
-          contents: 'read',
+          'contents': 'read',
           'id-token': 'write',
         },
         secrets: 'inherit',
@@ -191,7 +191,7 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
           },
           {
             name: 'Deploy',
-            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json',
+            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json --all',
           },
           {
             name: 'Start pipeline execution',
@@ -209,7 +209,7 @@ new YamlFile(project, '.github/workflows/test.yml', {
   obj: {
     name: 'test',
     permissions: {
-      contents: 'read',
+      'contents': 'read',
       'id-token': 'write',
     },
     on: {
