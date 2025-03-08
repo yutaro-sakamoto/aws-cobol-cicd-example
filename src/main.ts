@@ -3,11 +3,15 @@ import * as cdk from "aws-cdk-lib";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
 import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
 import * as dotenv from "dotenv";
+import * as constants from "./constants";
 
 dotenv.config();
 
@@ -15,12 +19,17 @@ dotenv.config();
  * サンプルのスタック
  */
 export class EcrStack extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
+  /**
+   * A constructor
+   * @param scope scope
+   * @param id id
+   * @param props properties of this stack
+   */
+  constructor(scope: Construct, id: string, props: MyStackProps) {
     super(scope, id, props);
 
-    const ecrRepositoryName = "my-ecr-repo";
     new ecr.Repository(this, "ECRRepository", {
-      repositoryName: ecrRepositoryName,
+      repositoryName: constants.ecrRepositoryName,
     });
 
     const pipeline = new codepipeline.Pipeline(this, "ApplicationPipeline", {
@@ -80,7 +89,7 @@ export class EcrStack extends Stack {
                   value: props.env!.region!,
                 },
                 IMAGE_REPO_NAME: {
-                  value: ecrRepositoryName,
+                  value: constants.ecrRepositoryName,
                 },
                 IMAGE_TAG: {
                   value: "latest",
@@ -128,22 +137,129 @@ export class EcrStack extends Stack {
         }),
       ],
     });
+
+    const taskDefinition = new ecs.FargateTaskDefinition(
+      this,
+      "TaskDefinition",
+      {
+        memoryLimitMiB: 512,
+        cpu: 256,
+      },
+    );
+
+    const container = taskDefinition.addContainer("Container", {
+      image: ecs.ContainerImage.fromEcrRepository(
+        ecr.Repository.fromRepositoryName(
+          this,
+          "ExistingECRRepository",
+          constants.ecrRepositoryName,
+        ),
+      ),
+      logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
+    });
+
+    container.addPortMappings({
+      containerPort: 80,
+    });
+
+    if (!props.synthOnly) {
+      new ssm.StringParameter(this, "TaskDefinitionArn", {
+        parameterName: constants.taskDefinitionArnSsmParamName,
+        stringValue: taskDefinition.taskDefinitionArn,
+      });
+    }
   }
 }
 
+/**
+ * A stack for infrastructure
+ */
+class InfrastructureStack extends Stack {
+  constructor(scope: Construct, id: string, props: MyStackProps) {
+    super(scope, id, props);
+
+    const vpc = new ec2.Vpc(this, "VPC", {});
+
+    const cluster = new ecs.Cluster(this, "EcsCluster", {
+      vpc,
+      containerInsights: true,
+    });
+
+    const defaultTaskDefinition = new ecs.FargateTaskDefinition(
+      this,
+      "DefaultTask",
+      {
+        family: "DefaultTask",
+      },
+    );
+
+    defaultTaskDefinition.addContainer("DdfaultContainer", {
+      containerName: "DefaultContainer",
+      image: ecs.ContainerImage.fromRegistry(
+        "registry.hub.docker.com/ealen/echo-server",
+      ),
+      logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
+    });
+
+    const fargateService = new ecs.FargateService(this, "FargateService", {
+      cluster,
+      taskDefinition: defaultTaskDefinition,
+    });
+
+    (
+      fargateService.node.tryFindChild("Service") as ecs.CfnService
+    ).taskDefinition = props.synthOnly
+      ? "dummy"
+      : ssm.StringParameter.valueForStringParameter(
+          this,
+          constants.taskDefinitionArnSsmParamName,
+        );
+  }
+}
+
+/**
+ * Stack props
+ */
+interface MyStackProps extends StackProps {
+  /**
+   * if true, only synthesize the stack
+   */
+  synthOnly: boolean;
+}
 // for development, use account/region from cdk cli
 const devEnv = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION,
 };
 
+const stackProps = {
+  env: devEnv,
+  synthOnly: process.env.CDK_SYNTH_ONLY
+    ? process.env.CDK_SYNTH_ONLY === "true"
+    : false,
+};
+
 const app = new App();
 
-const stack = new EcrStack(app, "aws-cobol-cicd-example-dev", { env: devEnv });
+const stack = new EcrStack(app, "aws-cobol-cicd-example-dev", stackProps);
+const infrastructureStack = new InfrastructureStack(
+  app,
+  "aws-cobol-cicd-example-dev-infrastructures",
+  stackProps,
+);
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 NagSuppressions.addStackSuppressions(stack, [
   { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
   { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
+  {
+    id: "AwsSolutions-S1",
+    reason: "Server access logs of S3 bucket are unnecessary",
+  },
+]);
+NagSuppressions.addStackSuppressions(infrastructureStack, [
+  { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
+  { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
+  { id: "AwsSolutions-VPC7", reason: "VPC Flow Logs are unnecessary" },
   {
     id: "AwsSolutions-S1",
     reason: "Server access logs of S3 bucket are unnecessary",

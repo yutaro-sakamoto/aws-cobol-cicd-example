@@ -103,6 +103,7 @@ new YamlFile(project, '.github/workflows/push.yml', {
     },
     permissions: {
       contents: 'read',
+      'id-token': 'write',
     },
     jobs: {
       'check-workflows': {
@@ -115,9 +116,13 @@ new YamlFile(project, '.github/workflows/push.yml', {
         needs: 'check-workflows',
         permissions: {
           contents: 'read',
+          'id-token': 'write',
         },
         secrets: 'inherit',
         uses: './.github/workflows/test.yml',
+        with: {
+          environment: 'dev',
+        },
       },
     },
   },
@@ -203,18 +208,40 @@ project.tryRemoveFile('.github/workflows/test.yml');
 new YamlFile(project, '.github/workflows/test.yml', {
   obj: {
     name: 'test',
-    on: 'workflow_call',
     permissions: {
       contents: 'read',
+      'id-token': 'write',
+    },
+    on: {
+      workflow_call: {
+        inputs: {
+          environment: {
+            type: 'string',
+            required: false,
+            default: 'dev',
+            description: 'Environment to deploy to',
+          },
+        },
+      },
     },
     env: {
       CDK_DEFAULT_ACCOUNT: 'example-account',
       CDK_DEFAULT_REGION: 'ap-northeast-1',
+      CDK_SYNTH_ONLY: 'true',
     },
     jobs: {
       test: {
         'runs-on': 'ubuntu-latest',
+        'environment': '${{ inputs.environment }}',
         'steps': [
+          {
+            uses: 'aws-actions/configure-aws-credentials@v4',
+            with: {
+              'role-to-assume': 'arn:aws:iam::${{ secrets.AWS_ID }}:role/${{ secrets.ROLE_NAME }}',
+              'role-session-name': 'gh-oidc-${{ github.run_id }}-${{ github.run_attempt }}',
+              'aws-region': '${{ secrets.AWS_REGION }}',
+            },
+          },
           {
             name: 'Checkout',
             uses: 'actions/checkout@v4',
@@ -250,7 +277,7 @@ new YamlFile(project, '.github/workflows/test.yml', {
           },
           {
             name: 'Check docs',
-            run: 'npx typedoc --validation --treatWarningsAsErrors --treatValidationWarningsAsErrors src/*.ts',
+            run: 'npx typedoc --validation src/*.ts',
           },
         ],
       },

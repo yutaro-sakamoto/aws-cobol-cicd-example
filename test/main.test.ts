@@ -9,6 +9,7 @@ const stack = new EcrStack(app, 'test', {
     account: 'example-account',
     region: 'example-region',
   },
+  synthOnly: true,
 });
 
 Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
