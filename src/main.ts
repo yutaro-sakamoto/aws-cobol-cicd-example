@@ -247,7 +247,6 @@ const infrastructureStack = new InfrastructureStack(
   "aws-cobol-cicd-example-dev-infrastructures",
   stackProps,
 );
-infrastructureStack.addDependency(stack);
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 NagSuppressions.addStackSuppressions(stack, [
   { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },

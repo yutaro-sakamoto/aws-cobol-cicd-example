@@ -190,12 +190,16 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
             `,
           },
           {
-            name: 'Deploy',
-            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json --all',
+            name: 'Deploy Application Stack',
+            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json aws-cobol-cicd-example-dev',
           },
           {
             name: 'Start pipeline execution',
             run: 'aws codepipeline start-pipeline-execution --name "$(jq -r \'."aws-cobol-cicd-example-dev".applicationPipelineName\' cdk-outputs.json)" --region "$CDK_DEFAULT_REGION"',
+          },
+          {
+            name: 'Deploy Infrastructure Stack',
+            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json aws-cobol-cicd-example-dev-infrastructures',
           },
         ],
       },
