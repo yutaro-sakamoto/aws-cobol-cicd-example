@@ -7,6 +7,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
@@ -174,11 +175,28 @@ export class EcrStack extends Stack {
 /**
  * A stack for infrastructure
  */
-class InfrastructureStack extends Stack {
+export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props: MyStackProps) {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, "VPC", {});
+
+    const vpcFlowLogGroup = new logs.LogGroup(this, "VpcFlowLogGroup", {
+      retention: logs.RetentionDays.ONE_DAY,
+    });
+
+    const vpcFlowLogRole = new iam.Role(this, "VpcFlowLogRole", {
+      assumedBy: new iam.ServicePrincipal("vpc-flow-logs.amazonaws.com"),
+    });
+
+    new ec2.FlowLog(this, "VpcFlowLog", {
+      resourceType: ec2.FlowLogResourceType.fromVpc(vpc),
+      trafficType: ec2.FlowLogTrafficType.REJECT,
+      destination: ec2.FlowLogDestination.toCloudWatchLogs(
+        vpcFlowLogGroup,
+        vpcFlowLogRole,
+      ),
+    });
 
     const cluster = new ecs.Cluster(this, "EcsCluster", {
       vpc,
@@ -259,7 +277,6 @@ NagSuppressions.addStackSuppressions(stack, [
 NagSuppressions.addStackSuppressions(infrastructureStack, [
   { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
   { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
-  { id: "AwsSolutions-VPC7", reason: "VPC Flow Logs are unnecessary" },
   {
     id: "AwsSolutions-S1",
     reason: "Server access logs of S3 bucket are unnecessary",
