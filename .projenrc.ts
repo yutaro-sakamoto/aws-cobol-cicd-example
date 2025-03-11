@@ -7,6 +7,9 @@ const project = new AwsCdkTypeScriptApp({
   devDeps: ['@yutaro-sakamoto/projen-cdk@v0.0.13'],
   name: 'aws-cobol-cicd-example',
   projenrcTs: true,
+  license: 'MIT',
+  copyrightOwner: 'Yutaro Sakamoto',
+  copyrightPeriod: '2025',
 
   // deps: [],                /* Runtime dependencies of this module. */
   // description: undefined,  /* The description is just a string that helps people understand the purpose of the package. */
