@@ -19,7 +19,7 @@ const project = new AwsCdkTypeScriptApp({
 project.addDeps('dotenv');
 project.addDeps('cdk-nag');
 project.gitignore.addPatterns('.env');
-
+project.gitignore.addPatterns('docs');
 
 // Deploy to AWS
 new YamlFile(project, '.github/workflows/push-dev.yml', {
