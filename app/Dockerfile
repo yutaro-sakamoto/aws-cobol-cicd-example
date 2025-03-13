@@ -1,14 +1,7 @@
-FROM nginx:alpine
+FROM ubuntu:24.04
 
-# Nginxのデフォルト設定を上書き
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN apt-get update
+RUN apt-get install -y build-essential gettext autoconf bison flex default-jdk
 
-# Hello Worldを表示するHTMLファイルを作成
-RUN mkdir -p /usr/www/html
-RUN echo "<html><body><h1>Hello World</h1></body></html>" > /usr/www/html/index.html
-
-# ポート80を公開
-EXPOSE 80
-
-# Nginxを起動
-CMD ["nginx", "-g", "daemon off;"]
+COPY opensourcecobol4j/ .
+RUN cd opensourcecobol4j/ && ./configure && make && make install
