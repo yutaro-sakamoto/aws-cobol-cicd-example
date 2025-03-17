@@ -1,38 +1,45 @@
-import { App, Aspects } from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
-import { AwsSolutionsChecks } from 'cdk-nag';
-import { EcrStack, InfrastructureStack } from '../src/main';
+import { App, Aspects } from "aws-cdk-lib";
+import { Template } from "aws-cdk-lib/assertions";
+import { AwsSolutionsChecks } from "cdk-nag";
+import { EcrStack, InfrastructureStack } from "../src/main";
 
 const app = new App();
-const stack = new EcrStack(app, 'ApplicationStack', {
+const stack = new EcrStack(app, "ApplicationStack", {
   env: {
-    account: 'example-account',
-    region: 'example-region',
+    account: "example-account",
+    region: "example-region",
   },
   synthOnly: true,
 });
-const infrastructureStack = new InfrastructureStack(app, 'infrastructureStack', {
-  env: {
-    account: 'example-account',
-    region: 'example-region',
+const infrastructureStack = new InfrastructureStack(
+  app,
+  "infrastructureStack",
+  {
+    env: {
+      account: "example-account",
+      region: "example-region",
+    },
+    synthOnly: true,
   },
-  synthOnly: true,
-});
+);
 
 Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
-test('Snapshot', () => {
-
+test("Snapshot", () => {
   const template = Template.fromStack(stack);
-  expect(template.toJSON()).toMatchSnapshot('applicationStack');
+  expect(template.toJSON()).toMatchSnapshot("applicationStack");
   const infrastructureTemplate = Template.fromStack(infrastructureStack);
-  expect(infrastructureTemplate.toJSON()).toMatchSnapshot('infrastructureStack');
+  expect(infrastructureTemplate.toJSON()).toMatchSnapshot(
+    "infrastructureStack",
+  );
 });
 
-test('All ECR Repositories Scan On', () => {
+test("All ECR Repositories Scan On", () => {
   const template = Template.fromStack(stack);
-  const resources = template.findResources('AWS::ECR::Repository');
+  const resources = template.findResources("AWS::ECR::Repository");
   for (const resource of Object.values(resources)) {
-    expect(resource.Properties.ImageScanningConfiguration.ScanOnPush).toBe(true);
+    expect(resource.Properties.ImageScanningConfiguration.ScanOnPush).toBe(
+      true,
+    );
   }
 });

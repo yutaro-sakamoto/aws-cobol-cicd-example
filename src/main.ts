@@ -1,18 +1,18 @@
-import { App, Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
-import * as cdk from 'aws-cdk-lib';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as logs from 'aws-cdk-lib/aws-logs';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
-import { Construct } from 'constructs';
-import * as dotenv from 'dotenv';
-import * as constants from './constants';
+import { App, Stack, StackProps, CfnOutput } from "aws-cdk-lib";
+import * as cdk from "aws-cdk-lib";
+import * as codebuild from "aws-cdk-lib/aws-codebuild";
+import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
+import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as ssm from "aws-cdk-lib/aws-ssm";
+import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
+import { Construct } from "constructs";
+import * as dotenv from "dotenv";
+import * as constants from "./constants";
 
 dotenv.config();
 
@@ -29,17 +29,17 @@ export class EcrStack extends Stack {
   constructor(scope: Construct, id: string, props: MyStackProps) {
     super(scope, id, props);
 
-    new ecr.Repository(this, 'ECRRepository', {
+    new ecr.Repository(this, "ECRRepository", {
       repositoryName: constants.ecrRepositoryName,
       imageScanOnPush: true,
     });
 
-    const pipeline = new codepipeline.Pipeline(this, 'ApplicationPipeline', {
-      pipelineName: 'ApplicationPipeline',
+    const pipeline = new codepipeline.Pipeline(this, "ApplicationPipeline", {
+      pipelineName: "ApplicationPipeline",
       pipelineType: codepipeline.PipelineType.V2,
     });
 
-    new CfnOutput(this, 'applicationPipelineName', {
+    new CfnOutput(this, "applicationPipelineName", {
       value: pipeline.pipelineName,
     });
 
@@ -47,8 +47,8 @@ export class EcrStack extends Stack {
       pipeline.artifactBucket.encryptionKey!,
       [
         {
-          id: 'AwsSolutions-KMS5',
-          reason: 'This key is used for the artifact bucket.',
+          id: "AwsSolutions-KMS5",
+          reason: "This key is used for the artifact bucket.",
         },
       ],
     );
@@ -56,16 +56,16 @@ export class EcrStack extends Stack {
     const sourceOutput = new codepipeline.Artifact();
 
     pipeline.addStage({
-      stageName: 'Source',
+      stageName: "Source",
       actions: [
         new codepipeline_actions.CodeStarConnectionsSourceAction({
-          actionName: 'GitHubSource',
-          owner: 'yutaro-sakamoto',
-          repo: 'aws-cobol-cicd-example',
-          branch: 'dev',
+          actionName: "GitHubSource",
+          owner: "yutaro-sakamoto",
+          repo: "aws-cobol-cicd-example",
+          branch: "dev",
           output: sourceOutput,
           connectionArn:
-            process.env.AWS_CODECONNECTIONS_ARN || 'aws_codeconections_arn',
+            process.env.AWS_CODECONNECTIONS_ARN || "aws_codeconections_arn",
           triggerOnPush: false,
         }),
       ],
@@ -74,11 +74,11 @@ export class EcrStack extends Stack {
     const buildOutput = new codepipeline.Artifact();
 
     pipeline.addStage({
-      stageName: 'Build',
+      stageName: "Build",
       actions: [
         new codepipeline_actions.CodeBuildAction({
-          actionName: 'DockerBuild',
-          project: new codebuild.PipelineProject(this, 'DockerBuildProject', {
+          actionName: "DockerBuild",
+          project: new codebuild.PipelineProject(this, "DockerBuildProject", {
             cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER),
             environment: {
               buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
@@ -94,42 +94,42 @@ export class EcrStack extends Stack {
                   value: constants.ecrRepositoryName,
                 },
                 IMAGE_TAG: {
-                  value: 'latest',
+                  value: "latest",
                 },
               },
             },
             buildSpec: codebuild.BuildSpec.fromObject({
-              version: '0.2',
+              version: "0.2",
               phases: {
                 pre_build: {
                   commands: [
-                    'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com',
+                    "aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com",
                   ],
                 },
                 build: {
                   commands: [
-                    'docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG app',
-                    'docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG',
+                    "docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG app",
+                    "docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG",
                   ],
                 },
                 post_build: {
                   commands: [
-                    'docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG',
+                    "docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG",
                   ],
                 },
               },
             }),
-            role: new iam.Role(this, 'CodeBuildRole', {
-              assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
+            role: new iam.Role(this, "CodeBuildRole", {
+              assumedBy: new iam.ServicePrincipal("codebuild.amazonaws.com"),
               managedPolicies: [
                 iam.ManagedPolicy.fromAwsManagedPolicyName(
-                  'AmazonS3ReadOnlyAccess',
+                  "AmazonS3ReadOnlyAccess",
                 ),
                 iam.ManagedPolicy.fromAwsManagedPolicyName(
-                  'AmazonEC2ContainerRegistryPowerUser',
+                  "AmazonEC2ContainerRegistryPowerUser",
                 ),
                 iam.ManagedPolicy.fromAwsManagedPolicyName(
-                  'CloudWatchLogsFullAccess',
+                  "CloudWatchLogsFullAccess",
                 ),
               ],
             }),
@@ -142,22 +142,22 @@ export class EcrStack extends Stack {
 
     const taskDefinition = new ecs.FargateTaskDefinition(
       this,
-      'TaskDefinition',
+      "TaskDefinition",
       {
         memoryLimitMiB: 512,
         cpu: 256,
       },
     );
 
-    const container = taskDefinition.addContainer('Container', {
+    const container = taskDefinition.addContainer("Container", {
       image: ecs.ContainerImage.fromEcrRepository(
         ecr.Repository.fromRepositoryName(
           this,
-          'ExistingECRRepository',
+          "ExistingECRRepository",
           constants.ecrRepositoryName,
         ),
       ),
-      logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs' }),
+      logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
     });
 
     container.addPortMappings({
@@ -165,7 +165,7 @@ export class EcrStack extends Stack {
     });
 
     if (!props.synthOnly) {
-      new ssm.StringParameter(this, 'TaskDefinitionArn', {
+      new ssm.StringParameter(this, "TaskDefinitionArn", {
         parameterName: constants.taskDefinitionArnSsmParamName,
         stringValue: taskDefinition.taskDefinitionArn,
       });
@@ -180,17 +180,17 @@ export class InfrastructureStack extends Stack {
   constructor(scope: Construct, id: string, props: MyStackProps) {
     super(scope, id, props);
 
-    const vpc = new ec2.Vpc(this, 'VPC', {});
+    const vpc = new ec2.Vpc(this, "VPC", {});
 
-    const vpcFlowLogGroup = new logs.LogGroup(this, 'VpcFlowLogGroup', {
+    const vpcFlowLogGroup = new logs.LogGroup(this, "VpcFlowLogGroup", {
       retention: logs.RetentionDays.ONE_DAY,
     });
 
-    const vpcFlowLogRole = new iam.Role(this, 'VpcFlowLogRole', {
-      assumedBy: new iam.ServicePrincipal('vpc-flow-logs.amazonaws.com'),
+    const vpcFlowLogRole = new iam.Role(this, "VpcFlowLogRole", {
+      assumedBy: new iam.ServicePrincipal("vpc-flow-logs.amazonaws.com"),
     });
 
-    new ec2.FlowLog(this, 'VpcFlowLog', {
+    new ec2.FlowLog(this, "VpcFlowLog", {
       resourceType: ec2.FlowLogResourceType.fromVpc(vpc),
       trafficType: ec2.FlowLogTrafficType.REJECT,
       destination: ec2.FlowLogDestination.toCloudWatchLogs(
@@ -199,40 +199,40 @@ export class InfrastructureStack extends Stack {
       ),
     });
 
-    const cluster = new ecs.Cluster(this, 'EcsCluster', {
+    const cluster = new ecs.Cluster(this, "EcsCluster", {
       vpc,
       containerInsights: true,
     });
 
     const defaultTaskDefinition = new ecs.FargateTaskDefinition(
       this,
-      'DefaultTask',
+      "DefaultTask",
       {
-        family: 'DefaultTask',
+        family: "DefaultTask",
       },
     );
 
-    defaultTaskDefinition.addContainer('DdfaultContainer', {
-      containerName: 'DefaultContainer',
+    defaultTaskDefinition.addContainer("DdfaultContainer", {
+      containerName: "DefaultContainer",
       image: ecs.ContainerImage.fromRegistry(
-        'registry.hub.docker.com/ealen/echo-server',
+        "registry.hub.docker.com/ealen/echo-server",
       ),
-      logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs' }),
+      logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
     });
 
-    const fargateService = new ecs.FargateService(this, 'FargateService', {
+    const fargateService = new ecs.FargateService(this, "FargateService", {
       cluster,
       taskDefinition: defaultTaskDefinition,
     });
 
     (
-      fargateService.node.tryFindChild('Service') as ecs.CfnService
+      fargateService.node.tryFindChild("Service") as ecs.CfnService
     ).taskDefinition = props.synthOnly
-      ? 'dummy'
+      ? "dummy"
       : ssm.StringParameter.valueForStringParameter(
-        this,
-        constants.taskDefinitionArnSsmParamName,
-      );
+          this,
+          constants.taskDefinitionArnSsmParamName,
+        );
   }
 }
 
@@ -254,33 +254,33 @@ const devEnv = {
 const stackProps = {
   env: devEnv,
   synthOnly: process.env.CDK_SYNTH_ONLY
-    ? process.env.CDK_SYNTH_ONLY === 'true'
+    ? process.env.CDK_SYNTH_ONLY === "true"
     : false,
 };
 
 const app = new App();
 
-const stack = new EcrStack(app, 'aws-cobol-cicd-example-dev', stackProps);
+const stack = new EcrStack(app, "aws-cobol-cicd-example-dev", stackProps);
 const infrastructureStack = new InfrastructureStack(
   app,
-  'aws-cobol-cicd-example-dev-infrastructures',
+  "aws-cobol-cicd-example-dev-infrastructures",
   stackProps,
 );
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 NagSuppressions.addStackSuppressions(stack, [
-  { id: 'AwsSolutions-IAM5', reason: 'Allow IAM policies to contain *' },
-  { id: 'AwsSolutions-IAM4', reason: 'Allow using managed policies' },
+  { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
+  { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
   {
-    id: 'AwsSolutions-S1',
-    reason: 'Server access logs of S3 bucket are unnecessary',
+    id: "AwsSolutions-S1",
+    reason: "Server access logs of S3 bucket are unnecessary",
   },
 ]);
 NagSuppressions.addStackSuppressions(infrastructureStack, [
-  { id: 'AwsSolutions-IAM5', reason: 'Allow IAM policies to contain *' },
-  { id: 'AwsSolutions-IAM4', reason: 'Allow using managed policies' },
+  { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
+  { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
   {
-    id: 'AwsSolutions-S1',
-    reason: 'Server access logs of S3 bucket are unnecessary',
+    id: "AwsSolutions-S1",
+    reason: "Server access logs of S3 bucket are unnecessary",
   },
 ]);
 app.synth();

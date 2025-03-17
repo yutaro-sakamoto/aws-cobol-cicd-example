@@ -272,7 +272,7 @@ new YamlFile(project, '.github/workflows/test.yml', {
           },
           {
             name: 'Check format by Prettier',
-            run: 'npx prettier src --check',
+            run: 'npx prettier src test --check',
           },
           {
             name: 'Check by ESLint',
