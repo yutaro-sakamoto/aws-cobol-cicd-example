@@ -228,11 +228,11 @@ export class InfrastructureStack extends Stack {
     (
       fargateService.node.tryFindChild('Service') as ecs.CfnService
     ).taskDefinition = props.synthOnly
-        ? 'dummy'
-        : ssm.StringParameter.valueForStringParameter(
-          this,
-          constants.taskDefinitionArnSsmParamName,
-        );
+      ? 'dummy'
+      : ssm.StringParameter.valueForStringParameter(
+        this,
+        constants.taskDefinitionArnSsmParamName,
+      );
   }
 }
 

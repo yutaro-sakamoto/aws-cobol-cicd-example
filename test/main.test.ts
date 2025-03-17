@@ -29,11 +29,10 @@ test('Snapshot', () => {
   expect(infrastructureTemplate.toJSON()).toMatchSnapshot('infrastructureStack');
 });
 
-test('ECR Repository Scan On', () => {
+test('All ECR Repositories Scan On', () => {
   const template = Template.fromStack(stack);
-  template.hasResourceProperties('AWS::ECR::Repository', {
-    ImageScanningConfiguration: {
-      ScanOnPush: true,
-    },
-  });
+  const resources = template.findResources('AWS::ECR::Repository');
+  for (const resource of Object.values(resources)) {
+    expect(resource.Properties.ImageScanningConfiguration.ScanOnPush).toBe(true);
+  }
 });
