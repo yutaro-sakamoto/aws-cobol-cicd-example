@@ -20,6 +20,7 @@ dotenv.config();
  * サンプルのスタック
  */
 export class EcrStack extends Stack {
+  public readonly ecrRepository: ecr.Repository;
   /**
    * A constructor
    * @param scope scope
@@ -29,7 +30,7 @@ export class EcrStack extends Stack {
   constructor(scope: Construct, id: string, props: MyStackProps) {
     super(scope, id, props);
 
-    new ecr.Repository(this, "ECRRepository", {
+    this.ecrRepository = new ecr.Repository(this, "ECRRepository", {
       repositoryName: constants.ecrRepositoryName,
       imageScanOnPush: true,
     });
@@ -233,6 +234,13 @@ export class InfrastructureStack extends Stack {
           this,
           constants.taskDefinitionArnSsmParamName,
         );
+
+    if (!props.synthOnly) {
+      new ssm.StringParameter(this, "FargateServiceArn", {
+        parameterName: constants.taskDefinitionArnSsmParamName,
+        stringValue: fargateService.serviceArn,
+      });
+    }
   }
 }
 
