@@ -3,7 +3,7 @@ import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
 import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ecs from "aws-cdk-lib/aws-ecs";
-import * as ssm from "aws-cdk-lib/aws-ssm";
+//import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 
 /**
@@ -22,6 +22,10 @@ export interface DeployEcsPipelineStackProps extends cdk.StackProps {
    * ECRリポジトリ名
    */
   ecrRepositoryName: string;
+  /**
+   *
+   */
+  fargateService: ecs.FargateService;
 }
 
 /**
@@ -35,57 +39,56 @@ export class DeployEcsPipelineStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
-    //const service = props.ecsService;
-
     const artifact = new codepipeline.Artifact();
 
-    const service = ecs.FargateService.fromFargateServiceAttributes(
-      this,
-      "FargateService",
-      {
-        serviceArn: ssm.StringParameter.valueForStringParameter(
-          this,
-          props.fargateServiceArnSsmParamVarName,
-        ),
-        cluster: ecs.Cluster.fromClusterArn(
-          this,
-          "ExistingCluster",
-          ssm.StringParameter.valueForStringParameter(
-            this,
-            props.clusterArnSsmParamVarName,
-          ),
-        ),
-      },
-    );
+    //const service = ecs.FargateService.fromFargateServiceAttributes(
+    //  this,
+    //  "FargateService",
+    //  {
+    //    serviceArn: ssm.StringParameter.valueForStringParameter(
+    //      this,
+    //      props.fargateServiceArnSsmParamVarName,
+    //    ),
+    //    cluster: ecs.Cluster.fromClusterArn(
+    //      this,
+    //      "ExistingCluster",
+    //      ssm.StringParameter.valueForStringParameter(
+    //        this,
+    //        props.clusterArnSsmParamVarName,
+    //      ),
+    //    ),
+    //  },
+    //);
+    const service = props.fargateService;
 
-    new codepipeline.Pipeline(this, "Pipeline", {
+    const pipeline = new codepipeline.Pipeline(this, "Pipeline", {
       pipelineName: "EcsBlueGreenPipeline",
-      stages: [
-        {
-          stageName: "Source",
-          actions: [
-            new codepipeline_actions.EcrSourceAction({
-              actionName: "ECR",
-              repository: ecr.Repository.fromRepositoryName(
-                this,
-                "ExistingECRRepository",
-                props.ecrRepositoryName,
-              ),
-              imageTag: "latest",
-              output: artifact,
-            }),
-          ],
-        },
-        {
-          stageName: "Deploy",
-          actions: [
-            new codepipeline_actions.EcsDeployAction({
-              actionName: "ECS",
-              service,
-              input: artifact,
-            }),
-          ],
-        },
+      pipelineType: codepipeline.PipelineType.V2,
+    });
+
+    pipeline.addStage({
+      stageName: "Source",
+      actions: [
+        new codepipeline_actions.EcrSourceAction({
+          actionName: "ECR",
+          repository: ecr.Repository.fromRepositoryName(
+            this,
+            "ExistingECRRepository",
+            props.ecrRepositoryName,
+          ),
+          imageTag: "latest",
+          output: artifact,
+        }),
+      ],
+    });
+    pipeline.addStage({
+      stageName: "Deploy",
+      actions: [
+        new codepipeline_actions.EcsDeployAction({
+          actionName: "DeployToECS",
+          service,
+          input: artifact,
+        }),
       ],
     });
   }

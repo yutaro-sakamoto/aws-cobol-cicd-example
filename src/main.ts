@@ -11,9 +11,9 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
-import { DeployEcsPipelineStack } from "./deploy-ecs-pipeline-stack";
 import * as dotenv from "dotenv";
 import * as constants from "./constants";
+import { DeployEcsPipelineStack } from "./deploy-ecs-pipeline-stack";
 
 dotenv.config();
 
@@ -179,6 +179,8 @@ export class EcrStack extends Stack {
  * A stack for infrastructure
  */
 export class InfrastructureStack extends Stack {
+  public readonly fargateService: ecs.FargateService;
+
   constructor(scope: Construct, id: string, props: MyStackProps) {
     super(scope, id, props);
 
@@ -226,6 +228,8 @@ export class InfrastructureStack extends Stack {
       cluster,
       taskDefinition: defaultTaskDefinition,
     });
+
+    this.fargateService = fargateService;
 
     (
       fargateService.node.tryFindChild("Service") as ecs.CfnService
@@ -288,6 +292,7 @@ const deployEcsPipelineStack = new DeployEcsPipelineStack(
     ecrRepositoryName: constants.ecrRepositoryName,
     fargateServiceArnSsmParamVarName: constants.fargateServiceArnParamName,
     clusterArnSsmParamVarName: constants.clusterArnParamName,
+    fargateService: infrastructureStack.fargateService,
   },
 );
 
@@ -314,6 +319,10 @@ NagSuppressions.addStackSuppressions(deployEcsPipelineStack, [
   {
     id: "AwsSolutions-S1",
     reason: "Server access logs of S3 bucket are unnecessary",
+  },
+  {
+    id: "AwsSolutions-KMS5",
+    reason: "Ignore key policy for artifact bucket",
   },
 ]);
 app.synth();
