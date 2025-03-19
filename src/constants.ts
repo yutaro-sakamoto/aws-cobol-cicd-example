@@ -11,5 +11,10 @@ export const taskDefinitionArnSsmParamName =
 /**
  * The SSM parameter name indicating the Fargate service ARN
  */
-export const fargateServiceArnparamName =
+export const fargateServiceArnParamName =
   "/ecs-cicd-example/fargate-service-arn";
+
+/**
+ * The SSM parameter name indicating the ECS cluster ARN
+ */
+export const clusterArnParamName = "/ecs-cicd-example/cluster-arn";

@@ -11,6 +11,7 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
 import { Construct } from "constructs";
+import { DeployEcsPipelineStack } from "./deploy-ecs-pipeline-stack";
 import * as dotenv from "dotenv";
 import * as constants from "./constants";
 
@@ -240,6 +241,10 @@ export class InfrastructureStack extends Stack {
         parameterName: constants.taskDefinitionArnSsmParamName,
         stringValue: fargateService.serviceArn,
       });
+      new ssm.StringParameter(this, "ClusterArn", {
+        parameterName: constants.clusterArnParamName,
+        stringValue: cluster.clusterArn,
+      });
     }
   }
 }
@@ -274,6 +279,18 @@ const infrastructureStack = new InfrastructureStack(
   "aws-cobol-cicd-example-dev-infrastructures",
   stackProps,
 );
+
+const deployEcsPipelineStack = new DeployEcsPipelineStack(
+  app,
+  "aws-cobol-cicd-example-dev-ecs-pipeline",
+  {
+    env: devEnv,
+    ecrRepositoryName: constants.ecrRepositoryName,
+    fargateServiceArnSsmParamVarName: constants.fargateServiceArnParamName,
+    clusterArnSsmParamVarName: constants.clusterArnParamName,
+  },
+);
+
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 NagSuppressions.addStackSuppressions(stack, [
   { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
@@ -284,6 +301,14 @@ NagSuppressions.addStackSuppressions(stack, [
   },
 ]);
 NagSuppressions.addStackSuppressions(infrastructureStack, [
+  { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
+  { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
+  {
+    id: "AwsSolutions-S1",
+    reason: "Server access logs of S3 bucket are unnecessary",
+  },
+]);
+NagSuppressions.addStackSuppressions(deployEcsPipelineStack, [
   { id: "AwsSolutions-IAM5", reason: "Allow IAM policies to contain *" },
   { id: "AwsSolutions-IAM4", reason: "Allow using managed policies" },
   {
