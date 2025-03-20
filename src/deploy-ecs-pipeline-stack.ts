@@ -11,14 +11,6 @@ import { Construct } from "constructs";
  */
 export interface DeployEcsPipelineStackProps extends cdk.StackProps {
   /**
-   * ECSサービス
-   */
-  fargateServiceArnSsmParamVarName: string;
-  /**
-   * ECSクラスタARN
-   */
-  clusterArnSsmParamVarName: string;
-  /**
    * ECRリポジトリ名
    */
   ecrRepositoryName: string;
@@ -41,24 +33,6 @@ export class DeployEcsPipelineStack extends cdk.Stack {
 
     const artifact = new codepipeline.Artifact();
 
-    //const service = ecs.FargateService.fromFargateServiceAttributes(
-    //  this,
-    //  "FargateService",
-    //  {
-    //    serviceArn: ssm.StringParameter.valueForStringParameter(
-    //      this,
-    //      props.fargateServiceArnSsmParamVarName,
-    //    ),
-    //    cluster: ecs.Cluster.fromClusterArn(
-    //      this,
-    //      "ExistingCluster",
-    //      ssm.StringParameter.valueForStringParameter(
-    //        this,
-    //        props.clusterArnSsmParamVarName,
-    //      ),
-    //    ),
-    //  },
-    //);
     const service = props.fargateService;
 
     const pipeline = new codepipeline.Pipeline(this, "Pipeline", {

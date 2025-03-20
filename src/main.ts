@@ -224,32 +224,19 @@ export class InfrastructureStack extends Stack {
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
     });
 
-    const fargateService = new ecs.FargateService(this, "FargateService", {
+    this.fargateService = new ecs.FargateService(this, "FargateService", {
       cluster,
       taskDefinition: defaultTaskDefinition,
     });
 
-    this.fargateService = fargateService;
-
     (
-      fargateService.node.tryFindChild("Service") as ecs.CfnService
+      this.fargateService.node.tryFindChild("Service") as ecs.CfnService
     ).taskDefinition = props.synthOnly
       ? "dummy"
       : ssm.StringParameter.valueForStringParameter(
           this,
           constants.taskDefinitionArnSsmParamName,
         );
-
-    if (!props.synthOnly) {
-      new ssm.StringParameter(this, "FargateServiceArn", {
-        parameterName: constants.taskDefinitionArnSsmParamName,
-        stringValue: fargateService.serviceArn,
-      });
-      new ssm.StringParameter(this, "ClusterArn", {
-        parameterName: constants.clusterArnParamName,
-        stringValue: cluster.clusterArn,
-      });
-    }
   }
 }
 
@@ -290,8 +277,6 @@ const deployEcsPipelineStack = new DeployEcsPipelineStack(
   {
     env: devEnv,
     ecrRepositoryName: constants.ecrRepositoryName,
-    fargateServiceArnSsmParamVarName: constants.fargateServiceArnParamName,
-    clusterArnSsmParamVarName: constants.clusterArnParamName,
     fargateService: infrastructureStack.fargateService,
   },
 );
