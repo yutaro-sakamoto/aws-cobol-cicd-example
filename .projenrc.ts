@@ -204,6 +204,10 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
             name: 'Deploy Infrastructure Stack',
             run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs.json aws-cobol-cicd-example-dev-infrastructures',
           },
+          {
+            name: 'Deploy EcsDeployPipeline Stack',
+            run: 'npx cdk deploy --require-approval never --outputs-file cdk-outputs-ecs-deploy.json aws-cobol-cicd-example-dev-ecs-pipeline',
+          },
         ],
       },
     },
