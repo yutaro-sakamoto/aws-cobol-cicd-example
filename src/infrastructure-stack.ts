@@ -28,6 +28,24 @@ export class InfrastructureStack extends Stack {
 
     const vpc = new ec2.Vpc(this, "VPC", {});
 
+    // Create VPC endpoints
+    vpc.addInterfaceEndpoint("ECREndpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR,
+    });
+
+    vpc.addInterfaceEndpoint("ECRDockerEndpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
+    });
+
+    vpc.addInterfaceEndpoint("CloudWatchEndpoint", {
+      service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+    });
+
+    new ec2.GatewayVpcEndpoint(this, "S3Endpoint", {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+      vpc,
+    });
+
     const vpcFlowLogGroup = new logs.LogGroup(this, "VpcFlowLogGroup", {
       retention: logs.RetentionDays.ONE_DAY,
     });
