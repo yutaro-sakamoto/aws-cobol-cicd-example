@@ -91,7 +91,7 @@ new YamlFile(project, '.github/workflows/check-workflows.yml', {
   },
 });
 
-project.tryRemoveFile('.github/workflows/push.yml');
+project.tryRemoveFile('.github/workflows/push.yml')
 new YamlFile(project, '.github/workflows/push.yml', {
   obj: {
     name: 'push',
@@ -292,6 +292,21 @@ new YamlFile(project, '.github/workflows/test.yml', {
           },
         ],
       },
+      'check-app': {
+        'runs-on': 'ubuntu-latest',
+        steps: [
+          {
+            uses: 'actions/checkout@v4',
+          },
+          {
+            name: 'Lint Dockerfile',
+            uses: 'hadolint/hadolint-action@master',
+            with: {
+              'dockerfile': 'app/Dockerfile',
+            }
+          },
+        ]
+      }
     },
   },
 });
