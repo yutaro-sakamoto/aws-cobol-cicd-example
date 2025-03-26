@@ -14,7 +14,7 @@
 #COPY --from=0 *.class .
 #
 #CMD ["java", "-cp", "/usr/lib/opensourcecobol4j.jar:.","prog"]
-FROM nginx:latest
+FROM nginx:1.27.4
 
 RUN echo '<h1>hello</h1>' > /usr/share/nginx/html/index.html
 
