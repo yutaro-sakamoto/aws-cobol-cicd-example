@@ -157,6 +157,9 @@ export class InfrastructureStack extends Stack {
         subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
       securityGroups: [fargateSecurityGroup],
+      enableECSManagedTags: true,
+      enableExecuteCommand: true,
+      propagateTags: ecs.PropagatedTagSource.SERVICE,
     });
 
     (
