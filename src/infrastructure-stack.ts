@@ -95,7 +95,7 @@ export class InfrastructureStack extends Stack {
       },
     );
 
-    defaultTaskDefinition.addContainer("DdfaultContainer", {
+    defaultTaskDefinition.addContainer("DefaultContainer", {
       containerName: "DefaultContainer",
       image: ecs.ContainerImage.fromRegistry(
         "registry.hub.docker.com/ealen/echo-server",
