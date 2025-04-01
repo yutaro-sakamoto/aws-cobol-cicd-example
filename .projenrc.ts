@@ -199,14 +199,10 @@ new YamlFile(project, '.github/workflows/deploy.yml', {
           {
             name: 'Execute pipeline execution',
             run: `
-              .github/workflows/shell/execute-pipeline-execution.sh \
+              .github/workflows/shell/execute-codepipeline.sh \
               "$CDK_DEFAULT_REGION" \
               "$(jq -r \'."aws-cobol-cicd-example-dev".applicationPipelineName\' cdk-outputs.json)"
             `,
-          },
-          {
-            name: 'Wait for pipeline execution to complete',
-            run: 'aws codepipeline wait pipeline-execution-succeeded --name "$(jq -r \'."aws-cobol-cicd-example-dev".applicationPipelineName\' cdk-outputs.json)" --pipeline-execution-id "$(jq -r \'."aws-cobol-cicd-example-dev".applicationPipelineExecutionId\' cdk-outputs.json)" --region "$CDK_DEFAULT_REGION"',
           },
           {
             name: 'Deploy Infrastructure Stack',
