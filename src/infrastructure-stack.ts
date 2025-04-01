@@ -166,17 +166,7 @@ export class InfrastructureStack extends Stack {
       propagateTags: ecs.PropagatedTagSource.SERVICE,
     });
 
-    (
-      this.fargateService.node.tryFindChild("Service") as ecs.CfnService
-    ).taskDefinition = props.synthOnly
-      ? "dummy"
-      : ssm.StringParameter.valueForStringParameter(
-          this,
-          constants.taskDefinitionArnSsmParamName,
-        );
-
     // Create ALB
-
     const alb = new elbv2.ApplicationLoadBalancer(this, "LB", {
       vpc,
       internetFacing: true,
