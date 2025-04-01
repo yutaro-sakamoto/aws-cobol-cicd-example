@@ -10,6 +10,7 @@ import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { NagSuppressions } from "cdk-nag";
+import * as ecr from "aws-cdk-lib/aws-ecr";
 
 /**
  * Stack props
@@ -87,25 +88,28 @@ export class InfrastructureStack extends Stack {
       containerInsights: true,
     });
 
-    const defaultTaskDefinition = new ecs.FargateTaskDefinition(
+    const taskDefinition = new ecs.FargateTaskDefinition(
       this,
-      "DefaultTask",
+      "TaskDefinition",
       {
-        family: "DefaultTask",
+        memoryLimitMiB: 512,
+        cpu: 256,
       },
     );
 
-    defaultTaskDefinition.addContainer("DefaultContainer", {
-      containerName: "DefaultContainer",
-      image: ecs.ContainerImage.fromRegistry(
-        "registry.hub.docker.com/ealen/echo-server",
+    const container = taskDefinition.addContainer("Container", {
+      image: ecs.ContainerImage.fromEcrRepository(
+        ecr.Repository.fromRepositoryName(
+          this,
+          "ExistingECRRepository",
+          constants.ecrRepositoryName,
+        ),
       ),
-      portMappings: [
-        {
-          containerPort: 80,
-        },
-      ],
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
+    });
+
+    container.addPortMappings({
+      containerPort: 80,
     });
 
     // Create security groups
@@ -152,7 +156,7 @@ export class InfrastructureStack extends Stack {
     // Create ECS service
     this.fargateService = new ecs.FargateService(this, "FargateService", {
       cluster,
-      taskDefinition: defaultTaskDefinition,
+      taskDefinition,
       vpcSubnets: {
         subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },

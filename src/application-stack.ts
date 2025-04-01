@@ -145,36 +145,5 @@ export class ApplicationStack extends Stack {
         }),
       ],
     });
-
-    const taskDefinition = new ecs.FargateTaskDefinition(
-      this,
-      "TaskDefinition",
-      {
-        memoryLimitMiB: 512,
-        cpu: 256,
-      },
-    );
-
-    const container = taskDefinition.addContainer("Container", {
-      image: ecs.ContainerImage.fromEcrRepository(
-        ecr.Repository.fromRepositoryName(
-          this,
-          "ExistingECRRepository",
-          constants.ecrRepositoryName,
-        ),
-      ),
-      logging: ecs.LogDrivers.awsLogs({ streamPrefix: "ecs" }),
-    });
-
-    container.addPortMappings({
-      containerPort: 80,
-    });
-
-    if (!props.synthOnly) {
-      new ssm.StringParameter(this, "TaskDefinitionArn", {
-        parameterName: constants.taskDefinitionArnSsmParamName,
-        stringValue: taskDefinition.taskDefinitionArn,
-      });
-    }
   }
 }
