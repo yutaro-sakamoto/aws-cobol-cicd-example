@@ -309,6 +309,11 @@ new YamlFile(project, '.github/workflows/test.yml', {
               'dockerfile': 'app/Dockerfile',
             }
           },
+          {
+            name: 'build a Docker image',
+            'working-directory': 'app',
+            run: 'docker build -t app:latest app',
+          }
         ]
       }
     },
